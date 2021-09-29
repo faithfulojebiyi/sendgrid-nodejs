@@ -34,10 +34,10 @@ describe('Mail', function() {
       });
 
       expect(mail.headers['List-Unsubscribe']).to
-        .equal('<mailto:test@test.com>');
+          .equal('<mailto:test@test.com>');
 
       expect(mail.toJSON().headers['List-Unsubscribe']).to
-        .equal('<mailto:test@test.com>');
+          .equal('<mailto:test@test.com>');
     });
 
     it('should detect dynamic template id', function() {

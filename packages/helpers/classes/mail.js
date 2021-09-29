@@ -68,7 +68,7 @@ class Mail {
       templateId, personalizations, attachments, ipPoolName, batchId,
       sections, headers, categories, category, customArgs, asm, mailSettings,
       trackingSettings, substitutions, substitutionWrappers, dynamicTemplateData, isMultiple,
-      hideWarnings,
+      hideWarnings, replyToList,
     } = data;
 
     //Set data
@@ -90,6 +90,7 @@ class Mail {
     this.setMailSettings(mailSettings);
     this.setTrackingSettings(trackingSettings);
     this.setHideWarnings(hideWarnings);
+    this.setReplyToList(replyToList);
 
     if (this.isDynamic) {
       this.setDynamicTemplateData(dynamicTemplateData);
@@ -188,7 +189,7 @@ class Mail {
         throw new Error('Expected `asm` to include an integer in its `groupId` field');
       }
       if (asm.groupsToDisplay &&
-        (!Array.isArray(asm.groupsToDisplay) || !asm.groupsToDisplay.every(group => typeof group === 'number'))) {
+          (!Array.isArray(asm.groupsToDisplay) || !asm.groupsToDisplay.every(group => typeof group === 'number'))) {
         throw new Error('Array of integers expected for `asm.groupsToDisplay`');
       }
       this.asm = asm;
@@ -210,7 +211,7 @@ class Mail {
     //Clear and use add helper to add one by one
     this.personalizations = [];
     personalizations
-      .forEach(personalization => this.addPersonalization(personalization));
+        .forEach(personalization => this.addPersonalization(personalization));
   }
 
   /**
@@ -246,9 +247,9 @@ class Mail {
    */
   addTo(to, cc, bcc) {
     if (
-      typeof to === 'undefined' &&
-      typeof cc === 'undefined' &&
-      typeof bcc === 'undefined'
+        typeof to === 'undefined' &&
+        typeof cc === 'undefined' &&
+        typeof bcc === 'undefined'
     ) {
       throw new Error('Provide at least one of to, cc or bcc');
     }
@@ -440,7 +441,7 @@ class Mail {
    */
   addHeader(key, value) {
     if (this._checkProperty('key', key, [this._createTypeCheck('string')])
-      && this._checkProperty('value', value, [this._createTypeCheck('string')])) {
+        && this._checkProperty('value', value, [this._createTypeCheck('string')])) {
       this.headers[key] = value;
     }
   }
@@ -504,7 +505,7 @@ class Mail {
       from, replyTo, sendAt, subject, content, templateId,
       personalizations, attachments, ipPoolName, batchId, asm,
       sections, headers, categories, customArgs, mailSettings,
-      trackingSettings,
+      trackingSettings, replyToList,
     } = this;
 
     //Initialize with mandatory values
@@ -560,6 +561,9 @@ class Mail {
     if (typeof ipPoolName !== 'undefined') {
       json.ipPoolName = ipPoolName;
     }
+    if(typeof replyToList !== 'undefined') {
+      json.replyToList = replyToList;
+    }
 
     //Return as snake cased object
     return toSnakeCase(json, ['substitutions', 'dynamicTemplateData', 'customArgs', 'headers', 'sections']);
@@ -577,8 +581,8 @@ class Mail {
     //Array?
     if (Array.isArray(data)) {
       return data
-        .filter(item => !!item)
-        .map(item => this.create(item));
+          .filter(item => !!item)
+          .map(item => this.create(item));
     }
 
     //Already instance of Mail class?
@@ -607,9 +611,9 @@ class Mail {
    */
   _setProperty(propertyName, value, propertyType) {
     let propertyChecksPassed = this._checkProperty(
-      propertyName,
-      value,
-      [this._checkUndefined, this._createTypeCheck(propertyType)]);
+        propertyName,
+        value,
+        [this._checkUndefined, this._createTypeCheck(propertyType)]);
 
     if (propertyChecksPassed) {
       this[propertyName] = value;
@@ -663,9 +667,22 @@ class Mail {
    */
   _doArrayCheck(propertyName, value) {
     return this._checkProperty(
-      propertyName,
-      value,
-      [this._checkUndefined, this._createCheckThatThrows(Array.isArray, 'Array expected for`' + propertyName + '`')]);
+        propertyName,
+        value,
+        [this._checkUndefined, this._createCheckThatThrows(Array.isArray, 'Array expected for`' + propertyName + '`')]);
+  }
+
+  /**
+   * Set the replyToList from email body
+   */
+  setReplyToList(replyToList) {
+    if (this._doArrayCheck('replyToList', replyToList) && replyToList.length) {
+      if (!replyToList.every(replyTo => replyTo && typeof replyTo.email === 'string')) {
+        throw new Error('Expected each replyTo to contain a `email` string');
+      }
+      // this.replyToList = EmailAddress.create(replyToList);
+      this.replyToList = replyToList;
+    }
   }
 }
 
